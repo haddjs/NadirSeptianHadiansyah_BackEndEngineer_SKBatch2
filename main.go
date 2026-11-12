@@ -8,9 +8,13 @@ import (
 func main() {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r * http.Request) {
+	api := &API{store: NewStore()}
+	mux.HandleFunc("POST /applicants", api.createApplicant)
+	mux.HandleFunc("GET /applicants", api.listApplicants)
+
+	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([] byte(`{"status":"ok"}`))
+		w.Write([]byte(`{"status":"ok"}`))
 	})
 
 	log.Println("Listening on :8080")
