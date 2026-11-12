@@ -71,7 +71,7 @@ func (s *Store) List() []Applicant {
 	return out
 }
 
-func (s *Store) UpdateStage(id int, nextStage Stage, nextStatus Status) (Applicant, error) {
+func (s *Store) Transition(id int, fn func(Applicant) (Applicant, error)) (Applicant, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -80,10 +80,13 @@ func (s *Store) UpdateStage(id int, nextStage Stage, nextStatus Status) (Applica
 		return Applicant{}, ErrNotFound
 	}
 
-	a.Stage = nextStage
-	a.Status = nextStatus
-	a.UpdatedAt = time.Now().UTC()
-	s.byID[id] = a
+	updated, err := fn(a)
+	if err != nil {
+		return Applicant{}, err
+	}
 
-	return a, nil
+	updated.UpdatedAt = time.Now().UTC()
+	s.byID[id] = updated
+
+	return updated, nil
 }

@@ -30,3 +30,9 @@ type CreateApplicantRequest struct {
 	PortfolioURL    string            `json:"portfolio_url"`
 	SocialMedia     map[string]string `json:"social_media"`
 }
+
+type UpdateStageRequest struct {
+	Status      string  `json:"status"`
+	ScheduledAt *string `json:"scheduled_at,omitempty"`
+	StartDate   *string `json:"start_date,omitempty"`
+}

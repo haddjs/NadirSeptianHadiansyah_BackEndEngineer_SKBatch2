@@ -1,9 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 	"unicode/utf8"
 )
 
@@ -13,6 +15,12 @@ var socialPrefixes = map[string]string{
 	"tiktok":    "tiktok.com/@",
 	"threads":   "threads.com/@",
 }
+
+type ValidationError struct {
+	Details []FieldError
+}
+
+func (e *ValidationError) Error() string { return "validation failed" }
 
 func validateCreate(req *CreateApplicantRequest) []FieldError {
 	var errs []FieldError
@@ -154,4 +162,28 @@ func socialMediaErros(m map[string]string) []FieldError {
 	}
 
 	return errs
+}
+
+const dateLayout = "2006-01-02"
+
+var jakarta = func() *time.Location {
+	if loc, err := time.LoadLocation("Asia/Jakarta"); err == nil {
+		return loc
+	}
+
+	return time.FixedZone("WIB", 7*60*60)
+}()
+
+func validateDate(s string) (string, error) {
+	t, err := time.ParseInLocation(dateLayout, s, jakarta)
+	if err != nil {
+		return "", errors.New("must be a valid YYYY-MM-DD date")
+	}
+
+	now := time.Now().In(jakarta)
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, jakarta)
+	if t.Before(today) {
+		return "", errors.New("must not be before today (WIB)")
+	}
+	return t.Format(dateLayout), nil
 }
