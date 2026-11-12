@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"sort"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -61,6 +62,8 @@ func validateCreate(req *CreateApplicantRequest) []FieldError {
 			errs = append(errs, FieldError{"portfolio_url", msg})
 		}
 	}
+
+	errs = append(errs, socialMediaErrors(req.SocialMedia)...)
 
 	return errs
 
@@ -121,24 +124,28 @@ func urlError(s string) string {
 	return ""
 }
 
-func socialMediaErros(m map[string]string) []FieldError {
+func socialMediaErrors(m map[string]string) []FieldError {
 	var errs []FieldError
-	for key, val := range m {
+
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		val := strings.TrimSpace(m[key])
+		field := "social_media." + key
+
 		prefix, ok := socialPrefixes[key]
+
 		if !ok {
-			errs = append(errs, FieldError{
-				"social_media" + key,
-				"unknown platform",
-			})
+			errs = append(errs, FieldError{field, "unknown platform"})
 			continue
 		}
 
-		val = strings.TrimSpace(val)
-		if val == "" {
-			errs = append(errs, FieldError{
-				"social_media" + key,
-				"must start with https://",
-			})
+		if !strings.HasPrefix(val, "https://") {
+			errs = append(errs, FieldError{field, "must start with https://"})
 			continue
 		}
 
@@ -147,20 +154,15 @@ func socialMediaErros(m map[string]string) []FieldError {
 
 		if !strings.HasPrefix(rest, prefix) {
 			errs = append(errs, FieldError{
-				"social_media" + key,
-				"must be a " + prefix + "URL",
+				field, "must be a " + prefix + "URL",
 			})
 			continue
 		}
 
 		if len(rest) == len(prefix) {
-			errs = append(errs, FieldError{
-				"social_media" + key,
-				"must include a username after " + prefix,
-			})
+			errs = append(errs, FieldError{field, "must include a username after " + prefix})
 		}
 	}
-
 	return errs
 }
 
