@@ -1,4 +1,4 @@
-# Applicant Tracking System (ATS) API
+# Applicant Tracking System API
 
 A lightweight, thread-safe Applicant Tracking System REST API built in Go using only the standard library. The API manages recruitment pipelines, handles applicant registrations, enforces stage-based state machines, and provides validated filtering and pagination.
 
@@ -7,31 +7,37 @@ A lightweight, thread-safe Applicant Tracking System REST API built in Go using 
 ## 1. Overview and How to Run
 
 ### Overview
+
 This service provides an API for hiring teams to manage candidates throughout the entire recruitment lifecycle—from initial CV screening through HR interview, technical assignment, user interview, job offering, and onboarding.
 
 **Key Features:**
+
 - **Zero Third-Party Dependencies**: Built exclusively with Go's standard library (`net/http`, `sync`, `encoding/json`, etc.).
 - **Deterministic State Machine**: Strict stage and status transition matrix preventing invalid recruitment steps.
 - **Thread-Safe In-Memory Store**: Synchronized read/write operations with email uniqueness constraints.
 - **Robust Input Validation**: Strict JSON body parsing, URL validation, platform-specific social media prefix checking, word-count motivation checks, and timezone-aware date validation (`Asia/Jakarta`).
 
 ### Prerequisites
+
 - **Go**: Version 1.22+ (tested with Go 1.27.4)
 - **cURL** or any REST client (e.g., Postman, Bruno)
 
 ### Running the Application
 
 1. **Clone and navigate to the project directory**:
+
    ```bash
    cd NadirSeptianHadiansyah_BackEndEngineer_SKBatch2
    ```
 
 2. **Run tests**:
+
    ```bash
    go test -v ./...
    ```
 
 3. **Start the server**:
+
    ```bash
    # Default port: 8080
    go run .
@@ -70,6 +76,7 @@ NadirSeptianHadiansyah_BackEndEngineer_SKBatch2/
 ## 3. Endpoints
 
 ### 3.1 Health Check
+
 Checks service availability.
 
 - **Route**: `GET /health`
@@ -83,6 +90,7 @@ Checks service availability.
 ---
 
 ### 3.2 Create Applicant
+
 Registers a new candidate into the recruitment pipeline. New candidates automatically start at the `cv_screening` stage with `pending` status.
 
 - **Route**: `POST /applicants`
@@ -94,10 +102,11 @@ Registers a new candidate into the recruitment pipeline. New candidates automati
   - `motivation`: String between 20 and 200 words.
   - `cv_url`: Valid `http` or `https` URL (max 2048 characters).
   - `portfolio_pdf_url`: Valid `http` or `https` URL (max 2048 characters).
-  - `portfolio_url` *(optional)*: Valid `http` or `https` URL if provided.
-  - `social_media` *(optional)*: Key-value map for `linkedin`, `instagram`, `tiktok`, or `threads`. Must match specific platform URL patterns (e.g., `https://linkedin.com/in/{username}`).
+  - `portfolio_url` _(optional)_: Valid `http` or `https` URL if provided.
+  - `social_media` _(optional)_: Key-value map for `linkedin`, `instagram`, `tiktok`, or `threads`. Must match specific platform URL patterns (e.g., `https://linkedin.com/in/{username}`).
 
 - **Sample Request**:
+
   ```bash
   curl -X POST http://localhost:8080/applicants \
     -H "Content-Type: application/json" \
@@ -143,21 +152,23 @@ Registers a new candidate into the recruitment pipeline. New candidates automati
 ---
 
 ### 3.3 List Applicants
+
 Retrieves a paginated, filterable, and sortable list of applicants.
 
 - **Route**: `GET /applicants`
 - **Query Parameters**:
   | Parameter | Type | Default | Description |
   |---|---|---|---|
-  | `stage` | string | *(none)* | Filter by stage (e.g., `cv_screening`, `hr_interview`, `assignment`, `user_interview`, `offering`, `onboarding`) |
-  | `status` | string | *(none)* | Filter by status (e.g., `pending`, `offered`, `scheduled`, `passed`, `rejected`) |
-  | `position` | string | *(none)* | Filter by position (case-insensitive) |
+  | `stage` | string | _(none)_ | Filter by stage (e.g., `cv_screening`, `hr_interview`, `assignment`, `user_interview`, `offering`, `onboarding`) |
+  | `status` | string | _(none)_ | Filter by status (e.g., `pending`, `offered`, `scheduled`, `passed`, `rejected`) |
+  | `position` | string | _(none)_ | Filter by position (case-insensitive) |
   | `page` | integer | `1` | Page number (`>= 1`) |
   | `limit` | integer | `20` | Items per page (`1` to `100`) |
   | `sort` | string | `created_at` | Field to sort by: `created_at` or `name` |
   | `order` | string | `desc` | Direction: `asc` or `desc` |
 
 - **Sample Request**:
+
   ```bash
   curl "http://localhost:8080/applicants?stage=cv_screening&status=pending&sort=created_at&order=desc&page=1&limit=10"
   ```
@@ -199,14 +210,15 @@ Retrieves a paginated, filterable, and sortable list of applicants.
 ---
 
 ### 3.4 Update Applicant Stage & Status
+
 Transitions an applicant to a new status according to the recruitment state machine. When a candidate reaches an advancing status (`passed` or `accepted`), they automatically progress to the next stage with its initial status.
 
 - **Route**: `PATCH /applicants/{id}/stage`
 - **Headers**: `Content-Type: application/json`
 - **Payload Parameters**:
-  - `status` *(string, required)*: Desired target status.
-  - `scheduled_at` *(string, required when status is `scheduled` or `rescheduled`)*: Date in `YYYY-MM-DD` format; must be today or future date in WIB (`Asia/Jakarta`).
-  - `start_date` *(string, required when status is `accepted`)*: Date in `YYYY-MM-DD` format; must be today or future date in WIB (`Asia/Jakarta`).
+  - `status` _(string, required)_: Desired target status.
+  - `scheduled_at` _(string, required when status is `scheduled` or `rescheduled`)_: Date in `YYYY-MM-DD` format; must be today or future date in WIB (`Asia/Jakarta`).
+  - `start_date` _(string, required when status is `accepted`)_: Date in `YYYY-MM-DD` format; must be today or future date in WIB (`Asia/Jakarta`).
 
 - **Stage Transition Rules**:
   | Current Stage | Current Status | Allowed Requested Statuses | Resulting Stage & Status |
@@ -223,6 +235,7 @@ Transitions an applicant to a new status according to the recruitment state mach
   | `onboarding` | `scheduled` | `completed`, `declined` | Both are terminal states. |
 
 - **Sample Request (Advancing from CV Screening to HR Interview)**:
+
   ```bash
   curl -X PATCH http://localhost:8080/applicants/1/stage \
     -H "Content-Type: application/json" \
@@ -232,6 +245,7 @@ Transitions an applicant to a new status according to the recruitment state mach
   ```
 
 - **Sample Response** (`200 OK`):
+
   ```json
   {
     "id": 1,
@@ -270,6 +284,7 @@ Transitions an applicant to a new status according to the recruitment state mach
 ## 4. Error Format and Status Code Table
 
 ### Error Response Schema
+
 All error responses return a unified JSON payload:
 
 ```json
@@ -284,20 +299,21 @@ All error responses return a unified JSON payload:
   ]
 }
 ```
-*(Note: If there are no granular field details, the `details` key is omitted).*
+
+_(Note: If there are no granular field details, the `details` key is omitted)._
 
 ### Status Code Table
 
-| Status Code | HTTP Status | Description / When Returned |
-|---|---|---|
-| **200** | `OK` | Successful retrieval (`GET /applicants`, `GET /health`) or successful stage update (`PATCH /applicants/{id}/stage`). |
-| **201** | `Created` | Successfully registered a new applicant (`POST /applicants`). |
-| **400** | `Bad Request` | Malformed JSON syntax, unexpected JSON fields (`DisallowUnknownFields`), failed field validation, unknown status/stage/position query filters, or missing mandatory dates (`scheduled_at`, `start_date`). |
-| **404** | `Not Found` | Requested route does not exist (`/*`), or applicant ID does not exist in the store. |
-| **409** | `Conflict` | Attempted to create an applicant with an email that is already registered (case-insensitive check). |
-| **422** | `Unprocessable Entity` | Illegal stage transition requested (e.g., attempting to jump from `offered` directly to `passed` in an interview stage, or requesting an invalid status for the current stage). |
-| **423** | `Locked` | Applicant is in a terminal status (`rejected`, `declined`, `completed`) and cannot be transitioned further. |
-| **500** | `Internal Server Error` | Unexpected server or storage failure. |
+| Status Code | HTTP Status             | Description / When Returned                                                                                                                                                                               |
+| ----------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **200**     | `OK`                    | Successful retrieval (`GET /applicants`, `GET /health`) or successful stage update (`PATCH /applicants/{id}/stage`).                                                                                      |
+| **201**     | `Created`               | Successfully registered a new applicant (`POST /applicants`).                                                                                                                                             |
+| **400**     | `Bad Request`           | Malformed JSON syntax, unexpected JSON fields (`DisallowUnknownFields`), failed field validation, unknown status/stage/position query filters, or missing mandatory dates (`scheduled_at`, `start_date`). |
+| **404**     | `Not Found`             | Requested route does not exist (`/*`), or applicant ID does not exist in the store.                                                                                                                       |
+| **409**     | `Conflict`              | Attempted to create an applicant with an email that is already registered (case-insensitive check).                                                                                                       |
+| **422**     | `Unprocessable Entity`  | Illegal stage transition requested (e.g., attempting to jump from `offered` directly to `passed` in an interview stage, or requesting an invalid status for the current stage).                           |
+| **423**     | `Locked`                | Applicant is in a terminal status (`rejected`, `declined`, `completed`) and cannot be transitioned further.                                                                                               |
+| **500**     | `Internal Server Error` | Unexpected server or storage failure.                                                                                                                                                                     |
 
 ---
 
@@ -345,6 +361,7 @@ All error responses return a unified JSON payload:
 ## 7. AI Usage Note
 
 AI tools were utilized during the development and refinement of this project:
+
 - **Refactoring & Code Tidiness**: Consolidating stray files (`position.go`, `list.go`) into their respective domain modules while preserving clean boundaries and eliminating dead code.
 - **Test Matrix Validation**: Formulating comprehensive edge-case test tables in `rules_test.go` covering illegal transitions, terminal states, and stage advancements.
 - **Documentation**: Assisting in synthesizing API schema specifications, error mappings, and architectural decision records for this README. All generated code and documentation were manually reviewed, validated, and verified through unit tests and automated smoke tests.
