@@ -39,7 +39,7 @@ func TestNextState(t *testing.T) {
 		{"offering declined is terminal", StageOffering, StatusDeclined, StatusAccepted, StageOffering, StatusDeclined, ErrTerminalStatus},
 		{"onboarding completed is terminal", StageOnboarding, StatusCompleted, StatusDeclined, StageOnboarding, StatusCompleted, ErrTerminalStatus},
 		{"onboarding declined is terminal", StageOnboarding, StatusDeclined, StatusCompleted, StageOnboarding, StatusDeclined, ErrTerminalStatus},
-		{"unknown stage treated as terminal", Stage("does_not_exist"), StatusPending, StatusPassed, Stage("does_not_exist"), StatusPending, ErrTerminalStatus},
+		{"unknown stage treated as terminal", Stage("does_not_exist"), StatusPending, StatusPassed, Stage("does_not_exist"), StatusPending, ErrUnknownStage},
 
 		{"cv pending cannot jump to offered", StageCVScreening, StatusPending, StatusOffered, StageCVScreening, StatusPending, ErrIllegalTransition},
 		{"cv pending cannot go to scheduled", StageCVScreening, StatusPending, StatusScheduled, StageCVScreening, StatusPending, ErrIllegalTransition},
