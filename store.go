@@ -20,7 +20,11 @@ type Store struct {
 }
 
 func NewStore() *Store {
-	return &Store{nextID: 1, byID: map[int]Applicant{}, byEmail: map[string]int{}}
+	return &Store{
+		nextID:  1,
+		byID:    make(map[int]Applicant),
+		byEmail: make(map[string]int),
+	}
 }
 
 func (s *Store) Create(a Applicant) (Applicant, error) {

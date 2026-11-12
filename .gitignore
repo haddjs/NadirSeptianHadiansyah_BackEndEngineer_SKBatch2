@@ -1,0 +1,16 @@
+# Binaries
+applicant-api
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, output & cover profiles
+*.test
+*.out
+*.prof
+
+# OS specific files
+.DS_Store
+Thumbs.db

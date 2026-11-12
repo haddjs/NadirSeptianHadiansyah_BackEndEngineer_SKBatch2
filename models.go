@@ -36,3 +36,25 @@ type UpdateStageRequest struct {
 	ScheduledAt *string `json:"scheduled_at,omitempty"`
 	StartDate   *string `json:"start_date,omitempty"`
 }
+
+type ListQuery struct {
+	Stage    Stage
+	Status   Status
+	Position Position
+	Page     int
+	Limit    int
+	Sort     string
+	Order    string
+}
+
+type ListMeta struct {
+	Page       int `json:"page"`
+	Limit      int `json:"limit"`
+	Total      int `json:"total"`
+	TotalPages int `json:"totalPages"`
+}
+
+type ListResponse struct {
+	Data []Applicant `json:"data"`
+	Meta ListMeta    `json:"meta"`
+}

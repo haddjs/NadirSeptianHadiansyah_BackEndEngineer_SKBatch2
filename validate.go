@@ -64,9 +64,7 @@ func validateCreate(req *CreateApplicantRequest) []FieldError {
 	}
 
 	errs = append(errs, socialMediaErrors(req.SocialMedia)...)
-
 	return errs
-
 }
 
 func emailError(s string) string {
